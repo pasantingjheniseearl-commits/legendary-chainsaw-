@@ -171,13 +171,9 @@ body { background:#0f172a; color:white; }
         // Clear inputs
         loginUser.value = "";
         loginPass.value = "";
-        
-        // Immediately show dashboard
-        document.getElementById('loginPage').classList.add('hidden');
-        document.getElementById('dashboard').classList.remove('hidden');
-        
-        // Load data
-        window.load();
+
+        // Let onAuthStateChanged handle dashboard display
+        // No need to manually show dashboard here
       })
       .catch(err => {
         console.error("Login error:", err.code, err.message);
@@ -297,25 +293,6 @@ body { background:#0f172a; color:white; }
       document.getElementById('dashboard').classList.add('hidden');
     }
   });
-
-  // TEST AUTH CONNECTION
-  console.log("🔧 Testing Firebase Auth with test account...");
-  signInWithEmailAndPassword(auth, "earlyang22@test.com", "Nayumi14")
-    .then(user => {
-      console.log("✅ Test Login OK:", user.user.email);
-      // Auto-logout after successful test to let user login normally
-      setTimeout(() => {
-        signOut(auth).then(() => {
-          console.log("✅ Test logout complete - ready for manual login");
-        });
-      }, 2000);
-    })
-    .catch(err => {
-      console.error("❌ Test Login Failed:", err.code, "-", err.message);
-      if (err.code === "auth/user-not-found") {
-        console.log("⚠️  Account doesn't exist. Please register first.");
-      }
-    });
 </script>
 
 </body>
