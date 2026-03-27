@@ -26,7 +26,7 @@ body { background:#0f172a; color:white; }
 <div id="loginPage" class="container d-flex align-items-center justify-content-center vh-100">
   <div class="card p-4" style="max-width:400px;width:100%;">
     <h3 class="text-center">Login</h3>
-    <input id="loginUser" class="form-control mb-2" placeholder="Username">
+    <input id="loginUser" class="form-control mb-2" placeholder="Email" type="email">
     <input id="loginPass" type="password" class="form-control mb-2" placeholder="Password">
     <button class="btn btn-primary w-100" onclick="login()">Login</button>
     <p class="text-center mt-2">
@@ -39,7 +39,7 @@ body { background:#0f172a; color:white; }
 <div id="registerPage" class="container d-flex align-items-center justify-content-center vh-100 hidden">
   <div class="card p-4" style="max-width:400px;width:100%;">
     <h3 class="text-center">Register</h3>
-    <input id="regUser" class="form-control mb-2" placeholder="Username">
+    <input id="regUser" class="form-control mb-2" placeholder="Email" type="email">
     <input id="regPass" type="password" class="form-control mb-2" placeholder="Password">
     <button class="btn btn-success w-100" onclick="register()">Register</button>
     <p class="text-center mt-2">
@@ -111,114 +111,185 @@ body { background:#0f172a; color:white; }
 </div>
 </div>
 
-<script>
-let users = JSON.parse(localStorage.getItem("users")) || [];
+<script type="module">
+  // Import Firebase functions
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
+  import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-// DEFAULT ADMIN ACCOUNT
-if(!users.find(u => u.user === "KIO")){
-  users.push({ user: "KIO", pass: "1234" });
-  localStorage.setItem("users", JSON.stringify(users));
-}
-let currentUser = null;
-let stock = JSON.parse(localStorage.getItem("stock")) || [];
-let history = JSON.parse(localStorage.getItem("history")) || [];
+  // Your web app's Firebase configuration
+  const firebaseConfig = {
+    apiKey: "AIzaSyBNN2zC3CwtlErJS1TmLBEleA_9eNL-nKM",
+    authDomain: "wmm-1603.firebaseapp.com",
+    databaseURL: "https://wmm-1603-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "wmm-1603",
+    storageBucket: "wmm-1603.firebasestorage.app",
+    messagingSenderId: "950641290675",
+    appId: "1:950641290675:web:10a17a68360b64e0b62fc6"
+  };
 
-/* AUTH */
-function register(){
-  if(!regUser.value || !regPass.value){ alert("Fill all fields"); return; }
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-  if(users.find(u=>u.user===regUser.value)){
-    alert("User exists"); return;
+  // APP STATE
+  let stock = JSON.parse(localStorage.getItem("stock")) || [];
+  let history = JSON.parse(localStorage.getItem("history")) || [];
+
+  // AUTH FUNCTIONS
+  window.register = function(){
+    let regUser = document.getElementById('regUser');
+    let regPass = document.getElementById('regPass');
+    if(!regUser.value || !regPass.value){ alert("Fill all fields"); return; }
+    if(regPass.value.length < 6){ alert("Password must be at least 6 characters"); return; }
+
+    createUserWithEmailAndPassword(auth, regUser.value, regPass.value)
+      .then(() => {
+        alert("Registered!");
+        regUser.value = "";
+        regPass.value = "";
+        window.showLogin();
+      })
+      .catch(err => alert(err.message));
+  };
+
+  window.login = function(){
+    let loginUser = document.getElementById('loginUser');
+    let loginPass = document.getElementById('loginPass');
+    if(!loginUser.value || !loginPass.value){ alert("Fill all fields"); return; }
+
+    signInWithEmailAndPassword(auth, loginUser.value, loginPass.value)
+      .then(() => {
+        loginUser.value = "";
+        loginPass.value = "";
+      })
+      .catch(err => alert(err.message));
+  };
+
+  window.logout = function(){
+    signOut(auth).then(() => {
+      stock = [];
+      history = [];
+      localStorage.clear();
+      location.reload();
+    }).catch(err => alert(err.message));
+  };
+
+  window.showRegister = function(){
+    document.getElementById('loginPage').classList.add("hidden");
+    document.getElementById('registerPage').classList.remove("hidden");
+  };
+
+  window.showLogin = function(){
+    document.getElementById('registerPage').classList.add("hidden");
+    document.getElementById('loginPage').classList.remove("hidden");
+  };
+
+  // STOCK FUNCTIONS
+  window.addStock = async function(){
+    let sku = document.getElementById('sku');
+    let desc = document.getElementById('desc');
+    let qty = document.getElementById('qty');
+    let price = document.getElementById('price');
+
+    if(!sku.value || !qty.value || qty.value<=0 || !price.value){ alert("Fill all fields"); return; }
+
+    try {
+      // Add to Firestore
+      await addDoc(collection(db, "stock"), {
+        sku: sku.value,
+        desc: desc.value,
+        qty: Number(qty.value),
+        price: Number(price.value),
+        date: new Date(),
+        userId: auth.currentUser.uid
+      });
+
+      // Also update local storage
+      let item = stock.find(x=>x.sku===sku.value);
+      if(item){ item.qty += Number(qty.value); }
+      else {
+        stock.push({ sku: sku.value, desc: desc.value, qty: Number(qty.value), price: Number(price.value) });
+      }
+
+      history.push({ date: new Date().toLocaleString(), type: "IN", sku: sku.value, qty: qty.value });
+
+      sku.value = ""; desc.value = ""; qty.value = ""; price.value = "";
+      alert("Saved to cloud!");
+      window.save(); window.load();
+    } catch (err) {
+      alert("Error: " + err.message);
+    }
+  };
+
+  window.save = function(){
+    localStorage.setItem("stock", JSON.stringify(stock));
+    localStorage.setItem("history", JSON.stringify(history));
+  };
+
+  window.load = function(){
+    let totalItemsCount = stock.length;
+    let totalQty = 0;
+    let low = 0;
+    let stockHTML = "";
+    let historyHTML = "";
+
+    stock.forEach(s=>{
+      totalQty += s.qty;
+      if(s.qty < 5) low++;
+
+      stockHTML += `
+        <tr>
+          <td>${s.sku}</td>
+          <td>${s.desc}</td>
+          <td>${s.qty}</td>
+          <td>₱${s.price}</td>
+        </tr>`;
+    });
+
+    history.slice().reverse().forEach(h=>{
+      historyHTML += `
+        <tr>
+          <td>${h.date}</td>
+          <td>${h.type}</td>
+          <td>${h.sku}</td>
+          <td>${h.qty}</td>
+        </tr>`;
+    });
+
+    document.getElementById('stockTable').innerHTML = stockHTML;
+    document.getElementById('historyTable').innerHTML = historyHTML;
+    document.getElementById('totalItems').innerText = totalItemsCount;
+    document.getElementById('totalStock').innerText = totalQty;
+    document.getElementById('lowStock').innerText = low;
+    document.getElementById('totalTrans').innerText = history.length;
+  };
+
+  // AUTO-CREATE TEST ACCOUNT
+  function createTestAccount() {
+    const testEmail = "earlyang22@test.com";
+    const testPassword = "Nayumi14";
+    
+    createUserWithEmailAndPassword(auth, testEmail, testPassword)
+      .catch(err => {
+        if (err.code !== "auth/email-already-in-use") {
+          console.log("Test account setup message: " + err.message);
+        }
+      });
   }
+  
+  // Create test account on page load
+  createTestAccount();
 
-  users.push({ user: regUser.value, pass: regPass.value });
-  localStorage.setItem("users", JSON.stringify(users));
-
-  alert("Registered!");
-  showLogin();
-}
-
-function login(){
-  let u = users.find(x=>x.user===loginUser.value && x.pass===loginPass.value);
-
-  if(u){
-    currentUser = u;
-    loginPage.classList.add("hidden");
-    dashboard.classList.remove("hidden");
-    load();
-  } else alert("Invalid login");
-}
-
-function logout(){ location.reload(); }
-
-function showRegister(){
-  loginPage.classList.add("hidden");
-  registerPage.classList.remove("hidden");
-}
-
-function showLogin(){
-  registerPage.classList.add("hidden");
-  loginPage.classList.remove("hidden");
-}
-
-/* STOCK */
-function addStock(){
-  if(!sku.value || qty.value<=0){ alert("Invalid input"); return; }
-
-  let item = stock.find(x=>x.sku===sku.value);
-
-  if(item){ item.qty += Number(qty.value); }
-  else {
-    stock.push({ sku: sku.value, desc: desc.value, qty: Number(qty.value), price: Number(price.value) });
-  }
-
-  history.push({ date: new Date().toLocaleString(), type: "IN", sku: sku.value, qty: qty.value });
-
-  save(); load();
-}
-
-function save(){
-  localStorage.setItem("stock", JSON.stringify(stock));
-  localStorage.setItem("history", JSON.stringify(history));
-}
-
-function load(){
-  stockTable.innerHTML="";
-  historyTable.innerHTML="";
-
-  let totalItems = stock.length;
-  let totalQty = 0;
-  let low = 0;
-
-  stock.forEach(s=>{
-    totalQty += s.qty;
-    if(s.qty < 5) low++;
-
-    stockTable.innerHTML += `
-      <tr>
-        <td>${s.sku}</td>
-        <td>${s.desc}</td>
-        <td>${s.qty}</td>
-        <td>₱${s.price}</td>
-      </tr>`;
+  // Monitor auth state
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      document.getElementById('loginPage').classList.add('hidden');
+      document.getElementById('dashboard').classList.remove('hidden');
+      window.load();
+    }
   });
-
-  history.slice().reverse().forEach(h=>{
-    historyTable.innerHTML += `
-      <tr>
-        <td>${h.date}</td>
-        <td>${h.type}</td>
-        <td>${h.sku}</td>
-        <td>${h.qty}</td>
-      </tr>`;
-  });
-
-  totalItems.innerText = totalItems;
-  totalStock.innerText = totalQty;
-  lowStock.innerText = low;
-  totalTrans.innerText = history.length;
-}
-
 </script>
 
 </body>
