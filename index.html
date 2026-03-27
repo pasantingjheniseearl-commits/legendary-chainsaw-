@@ -113,6 +113,12 @@ body { background:#0f172a; color:white; }
 
 <script>
 let users = JSON.parse(localStorage.getItem("users")) || [];
+
+// DEFAULT ADMIN ACCOUNT
+if(!users.find(u => u.user === "KIO")){
+  users.push({ user: "KIO", pass: "1234" });
+  localStorage.setItem("users", JSON.stringify(users));
+}
 let currentUser = null;
 let stock = JSON.parse(localStorage.getItem("stock")) || [];
 let history = JSON.parse(localStorage.getItem("history")) || [];
