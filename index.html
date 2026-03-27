@@ -287,11 +287,35 @@ body { background:#0f172a; color:white; }
   // Monitor auth state
   onAuthStateChanged(auth, (user) => {
     if (user) {
+      console.log("✅ User logged in:", user.email);
       document.getElementById('loginPage').classList.add('hidden');
       document.getElementById('dashboard').classList.remove('hidden');
       window.load();
+    } else {
+      console.log("❌ No user logged in");
+      document.getElementById('loginPage').classList.remove('hidden');
+      document.getElementById('dashboard').classList.add('hidden');
     }
   });
+
+  // TEST AUTH CONNECTION
+  console.log("🔧 Testing Firebase Auth with test account...");
+  signInWithEmailAndPassword(auth, "earlyang22@test.com", "Nayumi14")
+    .then(user => {
+      console.log("✅ Test Login OK:", user.user.email);
+      // Auto-logout after successful test to let user login normally
+      setTimeout(() => {
+        signOut(auth).then(() => {
+          console.log("✅ Test logout complete - ready for manual login");
+        });
+      }, 2000);
+    })
+    .catch(err => {
+      console.error("❌ Test Login Failed:", err.code, "-", err.message);
+      if (err.code === "auth/user-not-found") {
+        console.log("⚠️  Account doesn't exist. Please register first.");
+      }
+    });
 </script>
 
 </body>
