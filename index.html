@@ -26,8 +26,9 @@ body { background:#0f172a; color:white; }
 <div id="loginPage" class="container d-flex align-items-center justify-content-center vh-100">
   <div class="card p-4" style="max-width:400px;width:100%;">
     <h3 class="text-center">Login</h3>
-    <input id="loginUser" class="form-control mb-2" placeholder="Email" type="email">
-    <input id="loginPass" type="password" class="form-control mb-2" placeholder="Password">
+    <p class="text-center text-muted mb-3" style="font-size:12px;">Test Account:<br>earlyang22@test.com / Nayumi14</p>
+    <input id="loginUser" class="form-control mb-2" placeholder="Email" type="email" value="earlyang22@test.com">
+    <input id="loginPass" type="password" class="form-control mb-2" placeholder="Password" value="Nayumi14">
     <button class="btn btn-primary w-100" onclick="login()">Login</button>
     <p class="text-center mt-2">
       No account? <a href="#" onclick="showRegister()">Register</a>
@@ -266,30 +267,12 @@ body { background:#0f172a; color:white; }
     document.getElementById('totalTrans').innerText = history.length;
   };
 
-  // AUTO-CREATE TEST ACCOUNT
-  function createTestAccount() {
-    const testEmail = "earlyang22@test.com";
-    const testPassword = "Nayumi14";
-    
-    createUserWithEmailAndPassword(auth, testEmail, testPassword)
-      .catch(err => {
-        if (err.code !== "auth/email-already-in-use") {
-          console.log("Test account: " + err.message);
-        }
-      });
-  }
-
   // Monitor auth state
   onAuthStateChanged(auth, (user) => {
     if (user) {
       document.getElementById('loginPage').classList.add('hidden');
       document.getElementById('dashboard').classList.remove('hidden');
       window.load();
-    } else {
-      // Create test account when user is not logged in
-      setTimeout(() => {
-        createTestAccount();
-      }, 1000);
     }
   });
 </script>
