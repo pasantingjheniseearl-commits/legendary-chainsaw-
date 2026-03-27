@@ -1,124 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Pro Stock Dashboard</title>
-
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-
-<style>
-body { background:#0f172a; color:white; }
-.sidebar { height:100vh; background:#020617; padding:20px; }
-.sidebar a { display:block; color:#94a3b8; padding:10px; text-decoration:none; }
-.sidebar a:hover { background:#1e293b; color:white; }
-.card { background:#020617; border:1px solid #1e293b; }
-.table { color:white; }
-.stat-card { padding:20px; border-radius:10px; }
-.hidden { display:none; }
-</style>
-</head>
-
-<body>
-
-<!-- LOGIN -->
-<div id="loginPage" class="container d-flex align-items-center justify-content-center vh-100">
-  <div class="card p-4" style="max-width:400px;width:100%;">
-    <h3 class="text-center">Login</h3>
-    <p class="text-center text-muted mb-3" style="font-size:12px;">Test Account:<br>earlyang22@test.com / Nayumi14</p>
-    <input id="loginUser" class="form-control mb-2" placeholder="Email" type="email" value="earlyang22@test.com">
-    <input id="loginPass" type="password" class="form-control mb-2" placeholder="Password" value="Nayumi14">
-    <button class="btn btn-primary w-100" onclick="login()">Login</button>
-    <p class="text-center mt-2">
-      No account? <a href="#" onclick="showRegister()">Register</a>
-    </p>
-  </div>
-</div>
-
-<!-- REGISTER -->
-<div id="registerPage" class="container d-flex align-items-center justify-content-center vh-100 hidden">
-  <div class="card p-4" style="max-width:400px;width:100%;">
-    <h3 class="text-center">Register</h3>
-    <input id="regUser" class="form-control mb-2" placeholder="Email" type="email">
-    <input id="regPass" type="password" class="form-control mb-2" placeholder="Password">
-    <button class="btn btn-success w-100" onclick="register()">Register</button>
-    <p class="text-center mt-2">
-      <a href="#" onclick="showLogin()">Back to Login</a>
-    </p>
-  </div>
-</div>
-
-<!-- DASHBOARD -->
-<div id="dashboard" class="hidden">
-<div class="container-fluid">
-  <div class="row">
-
-    <div class="col-md-2 sidebar">
-      <h4>📊 Admin</h4>
-      <a href="#">Dashboard</a>
-      <a href="#">Inventory</a>
-      <a href="#">History</a>
-      <a href="#">Reports</a>
-    </div>
-
-    <div class="col-md-10 p-4">
-
-      <div class="d-flex justify-content-between mb-4">
-        <h3>Stock Dashboard</h3>
-        <button class="btn btn-danger" onclick="logout()">Logout</button>
-      </div>
-
-      <div class="row mb-4">
-        <div class="col-md-3"><div class="stat-card bg-primary"><h5>Total Items</h5><h2 id="totalItems">0</h2></div></div>
-        <div class="col-md-3"><div class="stat-card bg-success"><h5>Total Stock</h5><h2 id="totalStock">0</h2></div></div>
-        <div class="col-md-3"><div class="stat-card bg-warning"><h5>Low Stock</h5><h2 id="lowStock">0</h2></div></div>
-        <div class="col-md-3"><div class="stat-card bg-danger"><h5>Transactions</h5><h2 id="totalTrans">0</h2></div></div>
-      </div>
-
-      <div class="card p-3 mb-3">
-        <h5>Add Item</h5>
-        <div class="row">
-          <div class="col"><input id="sku" class="form-control" placeholder="SKU"></div>
-          <div class="col"><input id="desc" class="form-control" placeholder="Description"></div>
-          <div class="col"><input id="qty" type="number" class="form-control" placeholder="Qty"></div>
-          <div class="col"><input id="price" type="number" class="form-control" placeholder="Price"></div>
-          <div class="col"><button class="btn btn-success w-100" onclick="addStock()">Add</button></div>
-        </div>
-      </div>
-
-      <div class="card p-3 mb-3">
-        <h5>Inventory</h5>
-        <table class="table table-bordered">
-          <thead>
-            <tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th></tr>
-          </thead>
-          <tbody id="stockTable"></tbody>
-        </table>
-      </div>
-
-      <div class="card p-3">
-        <h5>Transactions</h5>
-        <table class="table table-bordered">
-          <thead>
-            <tr><th>Date</th><th>Type</th><th>SKU</th><th>Qty</th></tr>
-          </thead>
-          <tbody id="historyTable"></tbody>
-        </table>
-      </div>
-
-    </div>
-  </div>
-</div>
-</div>
-
 <script type="module">
-  // Import Firebase functions
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
   import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc, query, where, onSnapshot, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
 
-  // Your web app's Firebase configuration
   const firebaseConfig = {
     apiKey: "AIzaSyBNN2zC3CwtlErJS1TmLBEleA_9eNL-nKM",
     authDomain: "wmm-1603.firebaseapp.com",
@@ -129,171 +13,148 @@ body { background:#0f172a; color:white; }
     appId: "1:950641290675:web:10a17a68360b64e0b62fc6"
   };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
 
-  // APP STATE
   let stock = JSON.parse(localStorage.getItem("stock")) || [];
   let history = JSON.parse(localStorage.getItem("history")) || [];
 
-  // AUTH FUNCTIONS
-  window.register = function(){
-    let regUser = document.getElementById('regUser');
-    let regPass = document.getElementById('regPass');
-    if(!regUser.value || !regPass.value){ alert("Fill all fields"); return; }
-    if(regPass.value.length < 6){ alert("Password must be at least 6 characters"); return; }
+  // REGISTER
+  window.register = function() {
+    const regUser = document.getElementById("regUser").value;
+    const regPass = document.getElementById("regPass").value;
+    if (!regUser || !regPass) return alert("Fill all fields");
+    if (regPass.length < 6) return alert("Password must be at least 6 characters");
 
-    createUserWithEmailAndPassword(auth, regUser.value, regPass.value)
+    createUserWithEmailAndPassword(auth, regUser, regPass)
       .then(() => {
-        alert("Account created! Now login with your credentials.");
-        // Pre-fill login form
-        document.getElementById('loginUser').value = regUser.value;
-        document.getElementById('loginPass').value = regPass.value;
-        regUser.value = "";
-        regPass.value = "";
+        alert("Account created! Please login.");
+        document.getElementById("loginUser").value = regUser;
+        document.getElementById("loginPass").value = regPass;
         window.showLogin();
       })
-      .catch(err => {
-        console.error("Register error:", err.code, err.message);
-        alert("Registration failed: " + err.message);
-      });
+      .catch(err => alert("Registration failed: " + err.message));
   };
 
-  window.login = function(){
-    let loginUser = document.getElementById('loginUser');
-    let loginPass = document.getElementById('loginPass');
-    if(!loginUser.value || !loginPass.value){ alert("Fill all fields"); return; }
+  // LOGIN
+  window.login = function() {
+    const loginUser = document.getElementById("loginUser").value;
+    const loginPass = document.getElementById("loginPass").value;
+    if (!loginUser || !loginPass) return alert("Fill all fields");
 
-    signInWithEmailAndPassword(auth, loginUser.value, loginPass.value)
-      .then((userCredential) => {
-        // Clear inputs
-        loginUser.value = "";
-        loginPass.value = "";
-
-        // Let onAuthStateChanged handle dashboard display
-        // No need to manually show dashboard here
+    signInWithEmailAndPassword(auth, loginUser, loginPass)
+      .then(() => {
+        // Do NOT manually switch pages, onAuthStateChanged will handle it
       })
-      .catch(err => {
-        console.error("Login error:", err.code, err.message);
-        alert("Login failed: " + err.message);
-      });
+      .catch(err => alert("Login failed: " + err.message));
   };
 
-  window.logout = function(){
+  // LOGOUT
+  window.logout = function() {
     signOut(auth).then(() => {
       stock = [];
       history = [];
       localStorage.clear();
       location.reload();
-    }).catch(err => alert(err.message));
+    });
   };
 
-  window.showRegister = function(){
-    document.getElementById('loginPage').classList.add("hidden");
-    document.getElementById('registerPage').classList.remove("hidden");
+  window.showRegister = function() {
+    document.getElementById("loginPage").classList.add("hidden");
+    document.getElementById("registerPage").classList.remove("hidden");
   };
 
-  window.showLogin = function(){
-    document.getElementById('registerPage').classList.add("hidden");
-    document.getElementById('loginPage').classList.remove("hidden");
+  window.showLogin = function() {
+    document.getElementById("registerPage").classList.add("hidden");
+    document.getElementById("loginPage").classList.remove("hidden");
   };
 
-  // STOCK FUNCTIONS
-  window.addStock = async function(){
-    let sku = document.getElementById('sku');
-    let desc = document.getElementById('desc');
-    let qty = document.getElementById('qty');
-    let price = document.getElementById('price');
-
-    if(!sku.value || !qty.value || qty.value<=0 || !price.value){ alert("Fill all fields"); return; }
+  // STOCK
+  window.addStock = async function() {
+    const sku = document.getElementById("sku").value;
+    const desc = document.getElementById("desc").value;
+    const qty = Number(document.getElementById("qty").value);
+    const price = Number(document.getElementById("price").value);
+    if (!sku || !qty || qty <= 0 || !price) return alert("Fill all fields");
 
     try {
-      // Add to Firestore
       await addDoc(collection(db, "stock"), {
-        sku: sku.value,
-        desc: desc.value,
-        qty: Number(qty.value),
-        price: Number(price.value),
+        sku, desc, qty, price,
         date: new Date(),
         userId: auth.currentUser.uid
       });
 
-      // Also update local storage
-      let item = stock.find(x=>x.sku===sku.value);
-      if(item){ item.qty += Number(qty.value); }
-      else {
-        stock.push({ sku: sku.value, desc: desc.value, qty: Number(qty.value), price: Number(price.value) });
-      }
+      let item = stock.find(x => x.sku === sku);
+      if (item) item.qty += qty;
+      else stock.push({ sku, desc, qty, price });
 
-      history.push({ date: new Date().toLocaleString(), type: "IN", sku: sku.value, qty: qty.value });
+      history.push({ date: new Date().toLocaleString(), type: "IN", sku, qty });
 
-      sku.value = ""; desc.value = ""; qty.value = ""; price.value = "";
-      alert("Saved to cloud!");
-      window.save(); window.load();
+      document.getElementById("sku").value = "";
+      document.getElementById("desc").value = "";
+      document.getElementById("qty").value = "";
+      document.getElementById("price").value = "";
+
+      window.save();
+      window.load();
     } catch (err) {
-      alert("Error: " + err.message);
+      alert(err.message);
     }
   };
 
-  window.save = function(){
+  window.save = function() {
     localStorage.setItem("stock", JSON.stringify(stock));
     localStorage.setItem("history", JSON.stringify(history));
   };
 
-  window.load = function(){
-    let totalItemsCount = stock.length;
+  window.load = function() {
+    let totalItems = stock.length;
     let totalQty = 0;
-    let low = 0;
+    let lowStock = 0;
+
     let stockHTML = "";
-    let historyHTML = "";
-
-    stock.forEach(s=>{
+    stock.forEach(s => {
       totalQty += s.qty;
-      if(s.qty < 5) low++;
-
-      stockHTML += `
-        <tr>
-          <td>${s.sku}</td>
-          <td>${s.desc}</td>
-          <td>${s.qty}</td>
-          <td>₱${s.price}</td>
-        </tr>`;
+      if (s.qty < 5) lowStock++;
+      stockHTML += `<tr>
+        <td>${s.sku}</td>
+        <td>${s.desc}</td>
+        <td>${s.qty}</td>
+        <td>₱${s.price}</td>
+      </tr>`;
     });
 
-    history.slice().reverse().forEach(h=>{
-      historyHTML += `
-        <tr>
-          <td>${h.date}</td>
-          <td>${h.type}</td>
-          <td>${h.sku}</td>
-          <td>${h.qty}</td>
-        </tr>`;
+    let historyHTML = "";
+    history.slice().reverse().forEach(h => {
+      historyHTML += `<tr>
+        <td>${h.date}</td>
+        <td>${h.type}</td>
+        <td>${h.sku}</td>
+        <td>${h.qty}</td>
+      </tr>`;
     });
 
-    document.getElementById('stockTable').innerHTML = stockHTML;
-    document.getElementById('historyTable').innerHTML = historyHTML;
-    document.getElementById('totalItems').innerText = totalItemsCount;
-    document.getElementById('totalStock').innerText = totalQty;
-    document.getElementById('lowStock').innerText = low;
-    document.getElementById('totalTrans').innerText = history.length;
+    document.getElementById("stockTable").innerHTML = stockHTML;
+    document.getElementById("historyTable").innerHTML = historyHTML;
+    document.getElementById("totalItems").innerText = totalItems;
+    document.getElementById("totalStock").innerText = totalQty;
+    document.getElementById("lowStock").innerText = lowStock;
+    document.getElementById("totalTrans").innerText = history.length;
   };
 
-  // Monitor auth state
-  onAuthStateChanged(auth, (user) => {
+  // AUTH STATE MONITOR
+  onAuthStateChanged(auth, user => {
     if (user) {
       console.log("✅ User logged in:", user.email);
-      document.getElementById('loginPage').classList.add('hidden');
-      document.getElementById('dashboard').classList.remove('hidden');
+      document.getElementById("loginPage").classList.add("hidden");
+      document.getElementById("registerPage").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
       window.load();
     } else {
       console.log("❌ No user logged in");
-      document.getElementById('loginPage').classList.remove('hidden');
-      document.getElementById('dashboard').classList.add('hidden');
+      document.getElementById("dashboard").classList.add("hidden");
+      document.getElementById("loginPage").classList.remove("hidden");
     }
   });
 </script>
-
-</body>
-</html>
