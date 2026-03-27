@@ -274,13 +274,10 @@ body { background:#0f172a; color:white; }
     createUserWithEmailAndPassword(auth, testEmail, testPassword)
       .catch(err => {
         if (err.code !== "auth/email-already-in-use") {
-          console.log("Test account setup message: " + err.message);
+          console.log("Test account: " + err.message);
         }
       });
   }
-  
-  // Create test account on page load
-  createTestAccount();
 
   // Monitor auth state
   onAuthStateChanged(auth, (user) => {
@@ -288,6 +285,11 @@ body { background:#0f172a; color:white; }
       document.getElementById('loginPage').classList.add('hidden');
       document.getElementById('dashboard').classList.remove('hidden');
       window.load();
+    } else {
+      // Create test account when user is not logged in
+      setTimeout(() => {
+        createTestAccount();
+      }, 1000);
     }
   });
 </script>
