@@ -9,52 +9,50 @@
 <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
 <style>
-body {
-  background:#0f172a;
-  color:white;
-}
-
-.sidebar {
-  height:100vh;
-  background:#020617;
-  padding:20px;
-}
-
-.sidebar a {
-  display:block;
-  color:#94a3b8;
-  padding:10px;
-  text-decoration:none;
-}
-
-.sidebar a:hover {
-  background:#1e293b;
-  color:white;
-}
-
-.card {
-  background:#020617;
-  border:1px solid #1e293b;
-}
-
-.table {
-  color:white;
-}
-
-.stat-card {
-  padding:20px;
-  border-radius:10px;
-}
-
+body { background:#0f172a; color:white; }
+.sidebar { height:100vh; background:#020617; padding:20px; }
+.sidebar a { display:block; color:#94a3b8; padding:10px; text-decoration:none; }
+.sidebar a:hover { background:#1e293b; color:white; }
+.card { background:#020617; border:1px solid #1e293b; }
+.table { color:white; }
+.stat-card { padding:20px; border-radius:10px; }
+.hidden { display:none; }
 </style>
 </head>
 
 <body>
 
+<!-- LOGIN -->
+<div id="loginPage" class="container d-flex align-items-center justify-content-center vh-100">
+  <div class="card p-4" style="max-width:400px;width:100%;">
+    <h3 class="text-center">Login</h3>
+    <input id="loginUser" class="form-control mb-2" placeholder="Username">
+    <input id="loginPass" type="password" class="form-control mb-2" placeholder="Password">
+    <button class="btn btn-primary w-100" onclick="login()">Login</button>
+    <p class="text-center mt-2">
+      No account? <a href="#" onclick="showRegister()">Register</a>
+    </p>
+  </div>
+</div>
+
+<!-- REGISTER -->
+<div id="registerPage" class="container d-flex align-items-center justify-content-center vh-100 hidden">
+  <div class="card p-4" style="max-width:400px;width:100%;">
+    <h3 class="text-center">Register</h3>
+    <input id="regUser" class="form-control mb-2" placeholder="Username">
+    <input id="regPass" type="password" class="form-control mb-2" placeholder="Password">
+    <button class="btn btn-success w-100" onclick="register()">Register</button>
+    <p class="text-center mt-2">
+      <a href="#" onclick="showLogin()">Back to Login</a>
+    </p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="hidden">
 <div class="container-fluid">
   <div class="row">
 
-    <!-- SIDEBAR -->
     <div class="col-md-2 sidebar">
       <h4>📊 Admin</h4>
       <a href="#">Dashboard</a>
@@ -63,44 +61,20 @@ body {
       <a href="#">Reports</a>
     </div>
 
-    <!-- MAIN -->
     <div class="col-md-10 p-4">
 
-      <!-- TOP BAR -->
       <div class="d-flex justify-content-between mb-4">
         <h3>Stock Dashboard</h3>
         <button class="btn btn-danger" onclick="logout()">Logout</button>
       </div>
 
-      <!-- STATS -->
       <div class="row mb-4">
-        <div class="col-md-3">
-          <div class="stat-card bg-primary">
-            <h5>Total Items</h5>
-            <h2 id="totalItems">0</h2>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="stat-card bg-success">
-            <h5>Total Stock</h5>
-            <h2 id="totalStock">0</h2>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="stat-card bg-warning">
-            <h5>Low Stock</h5>
-            <h2 id="lowStock">0</h2>
-          </div>
-        </div>
-        <div class="col-md-3">
-          <div class="stat-card bg-danger">
-            <h5>Transactions</h5>
-            <h2 id="totalTrans">0</h2>
-          </div>
-        </div>
+        <div class="col-md-3"><div class="stat-card bg-primary"><h5>Total Items</h5><h2 id="totalItems">0</h2></div></div>
+        <div class="col-md-3"><div class="stat-card bg-success"><h5>Total Stock</h5><h2 id="totalStock">0</h2></div></div>
+        <div class="col-md-3"><div class="stat-card bg-warning"><h5>Low Stock</h5><h2 id="lowStock">0</h2></div></div>
+        <div class="col-md-3"><div class="stat-card bg-danger"><h5>Transactions</h5><h2 id="totalTrans">0</h2></div></div>
       </div>
 
-      <!-- ADD ITEM -->
       <div class="card p-3 mb-3">
         <h5>Add Item</h5>
         <div class="row">
@@ -112,70 +86,89 @@ body {
         </div>
       </div>
 
-      <!-- TABLE -->
       <div class="card p-3 mb-3">
         <h5>Inventory</h5>
         <table class="table table-bordered">
           <thead>
-            <tr>
-              <th>SKU</th>
-              <th>Description</th>
-              <th>Qty</th>
-              <th>Price</th>
-            </tr>
+            <tr><th>SKU</th><th>Description</th><th>Qty</th><th>Price</th></tr>
           </thead>
           <tbody id="stockTable"></tbody>
         </table>
       </div>
 
-      <!-- HISTORY -->
       <div class="card p-3">
         <h5>Transactions</h5>
         <table class="table table-bordered">
           <thead>
-            <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>SKU</th>
-              <th>Qty</th>
-            </tr>
+            <tr><th>Date</th><th>Type</th><th>SKU</th><th>Qty</th></tr>
           </thead>
           <tbody id="historyTable"></tbody>
         </table>
       </div>
 
     </div>
-
   </div>
+</div>
 </div>
 
 <script>
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let currentUser = null;
 let stock = JSON.parse(localStorage.getItem("stock")) || [];
 let history = JSON.parse(localStorage.getItem("history")) || [];
 
-function addStock(){
-  let item = stock.find(x=>x.sku===sku.value);
+/* AUTH */
+function register(){
+  if(!regUser.value || !regPass.value){ alert("Fill all fields"); return; }
 
-  if(item){
-    item.qty += Number(qty.value);
-  } else {
-    stock.push({
-      sku: sku.value,
-      desc: desc.value,
-      qty: Number(qty.value),
-      price: Number(price.value)
-    });
+  if(users.find(u=>u.user===regUser.value)){
+    alert("User exists"); return;
   }
 
-  history.push({
-    date: new Date().toLocaleString(),
-    type: "IN",
-    sku: sku.value,
-    qty: qty.value
-  });
+  users.push({ user: regUser.value, pass: regPass.value });
+  localStorage.setItem("users", JSON.stringify(users));
 
-  save();
-  load();
+  alert("Registered!");
+  showLogin();
+}
+
+function login(){
+  let u = users.find(x=>x.user===loginUser.value && x.pass===loginPass.value);
+
+  if(u){
+    currentUser = u;
+    loginPage.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+    load();
+  } else alert("Invalid login");
+}
+
+function logout(){ location.reload(); }
+
+function showRegister(){
+  loginPage.classList.add("hidden");
+  registerPage.classList.remove("hidden");
+}
+
+function showLogin(){
+  registerPage.classList.add("hidden");
+  loginPage.classList.remove("hidden");
+}
+
+/* STOCK */
+function addStock(){
+  if(!sku.value || qty.value<=0){ alert("Invalid input"); return; }
+
+  let item = stock.find(x=>x.sku===sku.value);
+
+  if(item){ item.qty += Number(qty.value); }
+  else {
+    stock.push({ sku: sku.value, desc: desc.value, qty: Number(qty.value), price: Number(price.value) });
+  }
+
+  history.push({ date: new Date().toLocaleString(), type: "IN", sku: sku.value, qty: qty.value });
+
+  save(); load();
 }
 
 function save(){
@@ -214,22 +207,12 @@ function load(){
       </tr>`;
   });
 
-  totalItemsEl.innerText = totalItems;
-  totalStockEl.innerText = totalQty;
-  lowStockEl.innerText = low;
-  totalTransEl.innerText = history.length;
+  totalItems.innerText = totalItems;
+  totalStock.innerText = totalQty;
+  lowStock.innerText = low;
+  totalTrans.innerText = history.length;
 }
 
-const totalItemsEl = document.getElementById("totalItems");
-const totalStockEl = document.getElementById("totalStock");
-const lowStockEl = document.getElementById("lowStock");
-const totalTransEl = document.getElementById("totalTrans");
-
-function logout(){
-  location.reload();
-}
-
-load();
 </script>
 
 </body>
