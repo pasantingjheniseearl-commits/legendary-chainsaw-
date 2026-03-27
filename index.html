@@ -147,12 +147,18 @@ body { background:#0f172a; color:white; }
 
     createUserWithEmailAndPassword(auth, regUser.value, regPass.value)
       .then(() => {
-        alert("Registered!");
+        alert("Account created! Now login with your credentials.");
+        // Pre-fill login form
+        document.getElementById('loginUser').value = regUser.value;
+        document.getElementById('loginPass').value = regPass.value;
         regUser.value = "";
         regPass.value = "";
         window.showLogin();
       })
-      .catch(err => alert(err.message));
+      .catch(err => {
+        console.error("Register error:", err.code, err.message);
+        alert("Registration failed: " + err.message);
+      });
   };
 
   window.login = function(){
@@ -161,11 +167,22 @@ body { background:#0f172a; color:white; }
     if(!loginUser.value || !loginPass.value){ alert("Fill all fields"); return; }
 
     signInWithEmailAndPassword(auth, loginUser.value, loginPass.value)
-      .then(() => {
+      .then((userCredential) => {
+        // Clear inputs
         loginUser.value = "";
         loginPass.value = "";
+        
+        // Immediately show dashboard
+        document.getElementById('loginPage').classList.add('hidden');
+        document.getElementById('dashboard').classList.remove('hidden');
+        
+        // Load data
+        window.load();
       })
-      .catch(err => alert(err.message));
+      .catch(err => {
+        console.error("Login error:", err.code, err.message);
+        alert("Login failed: " + err.message);
+      });
   };
 
   window.logout = function(){
